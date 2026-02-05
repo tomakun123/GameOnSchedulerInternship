@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Target columns in desired order
-TARGET_COLS = ["first_name", "last_name", "email", "company_name", "phone", "state"]
+TARGET_COLS = ["first_name", "last_name", "phone", "state", "email", "company_name"]
 RENAME_MAP = {"first_name": "firstName", "last_name": "lastName", "company_name": "companyName"}
 
 df = pd.read_csv("Indoor Sports Complexs_ Sports Complexs - NY.csv")
