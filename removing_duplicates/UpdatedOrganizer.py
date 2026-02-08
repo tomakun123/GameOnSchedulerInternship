@@ -5,7 +5,7 @@ INPUT_DIR = Path("input_csv")
 OUTPUT_DIR = Path("output_csv")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-TARGET_COLS = ["firstName", "lastName", "phone", "state", "email", "companyName"]
+TARGET_COLS = ["firstName", "lastName", "phoneNumber", "state", "email", "companyName"]
 
 RENAME_MAP = {
     "first_name": "firstName",
@@ -37,6 +37,10 @@ for csv_file in INPUT_DIR.glob("*.csv"):
             df[col] = ""
 
     df = df[TARGET_COLS]
+    
+    # Replace blank/empty values with "N/A"
+    for col in TARGET_COLS:
+        df.loc[is_blank(df[col]), col] = "N/A"
 
     # ---------- BEFORE DEDUPE COUNTS ----------
     rows_before += len(df)
@@ -44,7 +48,7 @@ for csv_file in INPUT_DIR.glob("*.csv"):
 
     # Normalize phone for dedupe key
     df["_phone_key"] = (
-        df["phone"]
+        df["phoneNumber"]
         .astype(str)
         .str.replace(r"\s+", "", regex=True)
         .str.strip()
