@@ -41,6 +41,11 @@ for csv_file in INPUT_DIR.glob("*.csv"):
     # Replace blank/empty values with "N/A"
     for col in TARGET_COLS:
         df.loc[is_blank(df[col]), col] = "N/A"
+        
+    # append '1' to phone numbers that don't start with '1' and aren't "N/A"
+    pn = df["phoneNumber"].astype(str).str.strip()
+    mask = pn.ne("N/A") & ~pn.str.startswith("1")
+    df.loc[mask, "phoneNumber"] = "1" + pn[mask]
 
     # ---------- BEFORE DEDUPE COUNTS ----------
     rows_before += len(df)
