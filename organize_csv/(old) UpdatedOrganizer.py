@@ -13,9 +13,21 @@ RENAME_MAP = {
     "company_name": "companyName",
 }
 
-def is_blank(s: pd.Series) -> pd.Series:
-    s = s.astype(str)
-    return s.isna() | s.str.strip().eq("") | s.str.strip().str.lower().eq("nan")
+def is_blank(obj):
+    """
+    Return a boolean mask indicating blank cells.
+    Works for Series and DataFrame. Treats NaN, empty/whitespace-only strings, and literal 'nan' (case-insensitive) as blank.
+    """
+    if isinstance(obj, pd.DataFrame):
+        s = obj.astype(str)
+        return obj.isna() | s.apply(lambda col: col.str.strip().eq("")) | s.apply(lambda col: col.str.strip().str.lower().eq("nan"))
+    elif isinstance(obj, pd.Series):
+        s = obj.astype(str)
+        return obj.isna() | s.str.strip().eq("") | s.str.strip().str.lower().eq("nan")
+    else:
+        # Fallback: convert to Series and evaluate
+        s = pd.Series(obj, dtype="object").astype(str)
+        return pd.Series(obj).isna() | s.str.strip().eq("") | s.str.strip().str.lower().eq("nan")
 
 files_processed = 0
 
@@ -40,14 +52,15 @@ for csv_file in INPUT_DIR.glob("*.csv"):
     
     # Replace blank/empty values with "N/A"
     for col in TARGET_COLS:
-        df.loc[is_blank(df[col]), col] = "N/A"
+        mask = is_blank(df[col])
+        df.loc[mask, col] = "N/A"
         
     # append '1' to phone numbers that don't start with '1' and aren't "N/A"
     pn = df["phoneNumber"].astype(str).str.strip()
     mask = pn.ne("N/A") & ~pn.str.startswith("1")
     df.loc[mask, "phoneNumber"] = "1" + pn[mask]
 
-    # ---------- BEFORE DEDUPE COUNTS ----------
+    # # ---------- BEFORE DEDUPE COUNTS ----------
     rows_before += len(df)
     blank_before += (df.apply(is_blank)).sum()
 
@@ -61,7 +74,7 @@ for csv_file in INPUT_DIR.glob("*.csv"):
 
     # Score rows by how much info they have (exclude phone)
     info_cols = [c for c in TARGET_COLS if c != "phone"]
-    df["_info_score"] = (~df[info_cols].apply(is_blank)).sum(axis=1)
+    df["_info_score"] = (~is_blank(df[info_cols])).sum(axis=1)
 
     # Deduplicate: keep row with highest info score per phone
     df = (
