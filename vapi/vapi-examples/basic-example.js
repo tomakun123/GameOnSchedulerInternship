@@ -6,11 +6,11 @@
  */
 
 require('dotenv').config();
-const Vapi = require('@vapi-ai/server-sdk').Vapi;
+const {VapiClient} = require('@vapi-ai/server-sdk');
 
 // Initialize Vapi client
-const client = new Vapi({
-  apiKey: process.env.VAPI_API_KEY,
+const client = new VapiClient({
+  token: process.env.VAPI_API_KEY,
 });
 
 async function listAssistants() {
@@ -42,7 +42,7 @@ async function createAssistant() {
         ]
       },
       voice: {
-        provider: 'elevenlabs',
+        provider: '11labs',
         voiceId: '21m00Tcm4TlvDq8ikWAM' // Rachel voice
       }
     });
