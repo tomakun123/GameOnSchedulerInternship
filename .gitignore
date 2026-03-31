@@ -1,2 +1,2 @@
-*.csv
+organize_csv/*/*.csv
 .env
